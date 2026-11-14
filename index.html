@@ -43,5 +43,64 @@ Conservas, legumbres, arroz y pasta | Garbanzos cocidos (sepia) | Cantidad por d
 Conservas, legumbres, arroz y pasta | Arroz integral (lunes) y arroz para el domingo | Cantidad por definir
 Conservas, legumbres, arroz y pasta | Quinoa | Cantidad por definir
 Congelados | Guisantes (estofado de ternera) | Cantidad por definir
-Panadería | Pan integral (picatostes César y huevos con tomate) | Cantidad por definir`;db.weeks['2026-10-2']={...fresh(),menu:parse(seed).result,source:'Lista facilitada · noviembre 2026'};db.lastMenu=db.weeks['2026-10-2'].menu.map(x=>({...x}));save()}render();})();
+Panadería | Pan integral (picatostes César y huevos con tomate) | Cantidad por definir`;db.weeks['2026-10-2']={...fresh(),menu:parse(seed).result,source:'Lista facilitada · noviembre 2026'};db.lastMenu=db.weeks['2026-10-2'].menu.map(x=>({...x}));save()}
+// Datos iniciales de la semana 4 (23–29 noviembre). Migración no destructiva y ejecutada una sola vez.
+const SEED_W4=`Frutería y verdulería | Patatas y boniatos | Cantidad por definir
+Frutería y verdulería | Cebollas, cebolla morada y ajo | Cantidad por definir
+Frutería y verdulería | Pimientos rojos y verdes | Cantidad por definir
+Frutería y verdulería | Tomates de ensalada y tomates cherry | Cantidad por definir
+Frutería y verdulería | Lechuga romana o mezcla de ensalada | Cantidad por definir
+Frutería y verdulería | Calabacines y berenjenas | Cantidad por definir
+Frutería y verdulería | Zanahorias, brócoli y judías verdes | Cantidad por definir
+Frutería y verdulería | Champiñones | Cantidad por definir
+Frutería y verdulería | Limones | Cantidad por definir
+Frutería y verdulería | Manzanas, peras, mandarinas, naranjas y caqui (postres opcionales) | Opcional
+Carnicería | Pechuga de pollo (arroz salteado, pollo asado y ensalada César) | Cantidad por definir
+Carnicería | Pechuga de pavo (plancha del martes y arroz con pavo del domingo) | Cantidad por definir
+Carnicería | Ternera para guisar (morcillo o aguja) | Cantidad por definir
+Carnicería | Carne picada de ternera (chili) | Cantidad por definir
+Pescadería | Lomos de merluza | Cantidad por definir
+Pescadería | Sepia limpia | Cantidad por definir
+Pescadería | Lomos de bacalao fresco o desalado | Cantidad por definir
+Pescadería | Lomos de salmón | Cantidad por definir
+Huevos y refrigerados | Huevos | Cantidad por definir
+Huevos y refrigerados | Claras de huevo (receta original, opcionales) | Opcional
+Huevos y refrigerados | Skyr natural (salsa César) | Cantidad por definir
+Conservas, legumbres, arroz y pasta | Atún al natural | Cantidad por definir
+Conservas, legumbres, arroz y pasta | Tomate triturado natural | Cantidad por definir
+Conservas, legumbres, arroz y pasta | Alubias cocidas (ensalada del martes) | Cantidad por definir
+Conservas, legumbres, arroz y pasta | Chili: alubias rojas / patatas en dados (elegir opción; si patatas, comprar más) | Alternativas
+Conservas, legumbres, arroz y pasta | Garbanzos cocidos (sepia) | Cantidad por definir
+Conservas, legumbres, arroz y pasta | Arroz integral (lunes) y arroz para el domingo | Cantidad por definir
+Conservas, legumbres, arroz y pasta | Quinoa | Cantidad por definir
+Congelados | Guisantes (estofado de ternera) | Cantidad por definir
+Panadería | Pan integral (picatostes César y huevos con tomate y pimientos) | Cantidad por definir
+Despensa | Aceite de oliva virgen extra, vinagre, mostaza y salsa de soja baja en sal | Revisar existencias
+Despensa | Sal, pimienta, comino, pimentón dulce, orégano, laurel, romero y perejil | Revisar existencias`;
+if(!db.migrations?.nov2026week4){
+ const key='2026-10-4'; const current=db.weeks[key]||fresh();
+ current.menu ||= [];current.manual ||= [];current.removed ||= [];
+ const baseName=n=>norm(n).replace(/\s*\([^)]*\)/g,'').replace(/\s+/g,' ').trim();
+ const same=(a,b)=>a.cat===b.cat&&baseName(a.name)===baseName(b.name);
+ const incoming=parse(SEED_W4).result;
+ const active=[];
+ for(const product of incoming){
+  const existing=[...current.menu,...current.manual].find(x=>same(x,product));
+  if(current.manual.some(x=>same(x,product)))continue;
+  if(existing){product.id=existing.id;product.bought=!!existing.bought}
+  if(!active.some(x=>same(x,product)))active.push(product);
+ }
+ // Los productos de menús anteriores que no coincidan permanecen recuperables.
+ const prior=[...(db.weeks['2026-10-2']?.menu||[]),...current.menu];
+ for(const product of prior){
+  if(active.some(x=>same(x,product))||current.manual.some(x=>same(x,product))||current.removed.some(x=>same(x,product)))continue;
+  current.removed.push({...product,id:uid(),bought:false,origin:'menu'});
+ }
+ current.menu=active;
+ current.source='Lista de compra · 23 al 29 de noviembre de 2026';
+ db.weeks[key]=current;
+ db.migrations ||= {};db.migrations.nov2026week4=true;
+ save();
+}
+render();})();
 </script></body></html>
